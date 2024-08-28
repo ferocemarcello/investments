@@ -10,8 +10,8 @@ tax = float(sys.argv[5])
 deposit_month_list = [deposit_month]*12*number_years
 
 for i in range(len(deposit_month)):
-    value+=deposit_month[i]
-    initial_value+=deposit_month[i]
+    value+=deposit_month_list[i]
+    initial_value+=deposit_month_list[i]
     monthly_gain = value * (inter_month-1)
     monthly_gain_taxed = (1-tax)*monthly_gain
     value = value * inter_month

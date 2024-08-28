@@ -7,6 +7,8 @@ number_years = float(sys.argv[3])
 inter_month = float(sys.argv[4])
 tax = float(sys.argv[5])
 
+deposit_month_list = [deposit_month]*12*number_years
+
 for i in range(len(deposit_month)):
     value+=deposit_month[i]
     initial_value+=deposit_month[i]

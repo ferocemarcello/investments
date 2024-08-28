@@ -11,17 +11,17 @@ tax = float(sys.argv[5])
 deposit_month_list = [deposit_month]*12*number_years
 wallet_value = deposited_value
 for i in range(len(deposit_month_list)):
-    wallet_value+=deposit_month_list[i]
     deposited_value+=deposit_month_list[i]
+
     monthly_gain = wallet_value * (inter_month-1)
     monthly_gain_taxed = (1-tax)*monthly_gain
-    wallet_value = wallet_value * inter_month
+
+    wallet_value *= inter_month
+    wallet_value+=deposit_month_list[i]
     if (i+1)%12==0:
         print("after "+str((i+1)/12)+" years, wallet value: " + str(wallet_value) +"\ndeposited value: "+ str(deposited_value))
         print("ROI: " + str(wallet_value/deposited_value))
         print("Monthly gain, taxed: " + str(monthly_gain_taxed))
         print("")
-    if (i+1)%12==0 and (i+1)/12 == 10:
-        wallet_value+=1000000
 
-print("value when withdrawed after taxes: "+str((1-tax)*(wallet_value-deposited_value)))
+print("value when withdrawed after taxes: "+str(deposited_value+(1-tax)*(wallet_value-deposited_value)))

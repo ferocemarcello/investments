@@ -7,9 +7,11 @@ number_years = float(sys.argv[3])
 inter_year = float(sys.argv[4])
 tax = float(sys.argv[5])
 
+deposit_year_list = [deposit_year]*number_years
+
 for i in range(len(deposit_year)):
-    value+=deposit_year[i]
-    init_value+=deposit_year[i]
+    value+=deposit_year_list[i]
+    init_value+=deposit_year_list[i]
     value = value * inter_year
     print("after "+str(i+1)+" years, wallet value: " + str(value) +"\ndeposited value: "+ str(init_value))
     print("ROI: " + str(value/init_value))

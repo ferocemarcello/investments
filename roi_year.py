@@ -21,5 +21,6 @@ for deposit in deposit_year_list:
     print(f"Yearly gain, taxed: {yearly_gain_taxed}\n")
     count_years +=1
 
-taxed_value = (1-tax)*wallet_value
-print("Wallet value when withdrawed after taxes: "+str(taxed_value))
+taxed_value = tax*(wallet_value-deposited_value)
+wallet_after_taxes = wallet_value-taxed_value
+print(f"Wallet value when withdrawed after taxes: {wallet_after_taxes}")

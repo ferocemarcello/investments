@@ -15,10 +15,8 @@ for deposit in deposit_year_list:
     wallet_value+=deposit
     deposited_value+=deposit
     wallet_value = wallet_value * inter_year
-    print(f"after {count_years} years, wallet value: {wallet_value}.\ndeposited value: {deposited_value}")
-    print(f"ROI: {(wallet_value/deposited_value)}")
-    yearly_gain_taxed = (1-tax)*wallet_value
-    print(f"Yearly gain, taxed: {yearly_gain_taxed}\n")
+    print(f"after {count_years} years:\n\twallet value: {wallet_value}.\n\tdeposited value: {deposited_value}")
+    print(f"\tROI: {(wallet_value/deposited_value)}\n")
     count_years +=1
 
 taxed_value = tax*(wallet_value-deposited_value)

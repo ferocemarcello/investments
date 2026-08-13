@@ -367,6 +367,89 @@
   }
   .error-msg.show{ display: block; }
 
+  /* ---------- SCENARIO CHART ---------- */
+
+  .scenario-stage{
+    margin-top: clamp(28px, 4vw, 44px);
+  }
+
+  .scenario{
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 6px;
+    box-shadow: 0 24px 56px -20px rgba(0,0,0,0.6);
+    padding: 26px 32px 30px;
+  }
+
+  .scenario-eyebrow{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--brass-soft);
+    margin: 0 0 8px;
+  }
+
+  .scenario-title{
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: clamp(1.25rem, 2.4vw, 1.6rem);
+    margin: 0 0 10px;
+    color: var(--ink);
+  }
+
+  .scenario-note{
+    font-size: 0.88rem;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    max-width: 62ch;
+    margin: 0 0 20px;
+  }
+
+  .scenario-chart-wrap{
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .scenario-chart-wrap svg{
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .scenario-legend{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--paper-shade);
+  }
+
+  .legend-item{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+  }
+
+  .legend-swatch{
+    width: 18px;
+    height: 3px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .legend-label{
+    color: var(--ink-soft);
+  }
+
+  .legend-value{
+    font-weight: 700;
+    color: var(--ink);
+  }
+
   /* ---------- FOOTER / FORMULA NOTE ---------- */
 
   footer.note{
@@ -511,6 +594,19 @@
 
   </main>
 
+  <!-- SCENARIO CHART -->
+  <section class="scenario-stage" aria-labelledby="scenario-title-el">
+    <div class="scenario">
+      <p class="scenario-eyebrow">Growth path</p>
+      <h2 class="scenario-title" id="scenario-title-el">Same average rate, different order</h2>
+      <p class="scenario-note">These three lines use the same average annual growth rate you entered above, just distributed differently across the years — front-loaded, back-loaded, or flat. With regular contributions, when the higher-growth years land matters: growth applied to a larger, later balance compounds more than growth applied early, while the balance is still small.</p>
+      <div class="scenario-chart-wrap">
+        <svg id="scenarioSvg" viewBox="0 0 640 320" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="scenario-legend" id="scenarioLegend"></div>
+    </div>
+  </section>
+
   <footer class="note">
     <h3>How this compounds</h3>
     <p>Each month, the existing balance grows by the monthly rate, and that month's contribution is added. Over the full period this becomes: <code>current × (1+r)^n + contribution × (((1+r)^n − 1) / r)</code>, where <code>r</code> is the monthly growth rate and <code>n</code> is the number of months.</p>
@@ -636,6 +732,137 @@
     outFutureValue.textContent = '$' + fmtMoney(futureValue);
     outContributed.textContent = '$' + fmtMoney(totalContributed);
     outGrowthEarned.textContent = '$' + fmtMoney(growthEarned);
+
+    renderScenarioChart(currentValue, monthlyInvestment, monthlyGrowthInput, years);
+  }
+
+  // ---------- Scenario chart: same average annual rate, different sequencing ----------
+
+  const SCENARIO_SPREAD_PP = 3; // percentage points of spread around the average rate
+
+  // Build a linear ramp of annual rates (in %) across `years`, averaging to `avgPct`.
+  function buildRamp(avgPct, spreadPct, years, ascending){
+    if (years <= 1) return [avgPct];
+    const start = ascending ? avgPct - spreadPct : avgPct + spreadPct;
+    const end = ascending ? avgPct + spreadPct : avgPct - spreadPct;
+    const rates = [];
+    for (let i = 0; i < years; i++){
+      const t = i / (years - 1);
+      rates.push(start + (end - start) * t);
+    }
+    return rates;
+  }
+
+  // Simulate month-by-month, applying that year's annual rate (converted to monthly)
+  // for all 12 months in the year, adding the contribution at the end of each month.
+  // Returns an array of balances at year 0 (start), 1, 2, ... years.
+  function simulateSchedule(startValue, monthlyContribution, annualRatesPct){
+    let balance = startValue;
+    const yearEndBalances = [startValue];
+    for (const pct of annualRatesPct){
+      const monthlyRate = annualToMonthly(pct / 100);
+      for (let m = 0; m < 12; m++){
+        balance = balance * (1 + monthlyRate) + monthlyContribution;
+      }
+      yearEndBalances.push(balance);
+    }
+    return yearEndBalances;
+  }
+
+  function fmtCompact(n){
+    if (!isFinite(n)) return '—';
+    const sign = n < 0 ? '-' : '';
+    const abs = Math.abs(n);
+    if (abs >= 1e6) return sign + '$' + (abs / 1e6).toFixed(abs >= 1e7 ? 1 : 2) + 'M';
+    if (abs >= 1e3) return sign + '$' + (abs / 1e3).toFixed(abs >= 1e4 ? 0 : 1) + 'K';
+    return sign + '$' + abs.toFixed(0);
+  }
+
+  const svgNS = 'http://www.w3.org/2000/svg';
+  function svgEl(tag, attrs){
+    const el = document.createElementNS(svgNS, tag);
+    for (const k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+
+  function renderScenarioChart(currentValue, monthlyInvestment, avgMonthlyGrowthPct, years){
+    const svg = document.getElementById('scenarioSvg');
+    const legend = document.getElementById('scenarioLegend');
+    svg.innerHTML = '';
+    legend.innerHTML = '';
+
+    const yearsInt = Math.max(1, Math.round(years));
+    const avgAnnualPct = monthlyToAnnual(avgMonthlyGrowthPct / 100) * 100;
+
+    const evenRates = new Array(yearsInt).fill(avgAnnualPct);
+    const lowToHighRates = buildRamp(avgAnnualPct, SCENARIO_SPREAD_PP, yearsInt, true);
+    const highToLowRates = buildRamp(avgAnnualPct, SCENARIO_SPREAD_PP, yearsInt, false);
+
+    const series = [
+      { label: 'Even growth', color: '#8A6D2F', data: simulateSchedule(currentValue, monthlyInvestment, evenRates) },
+      { label: 'Low \u2192 high', color: '#B08C3E', data: simulateSchedule(currentValue, monthlyInvestment, lowToHighRates) },
+      { label: 'High \u2192 low', color: '#8C3A2E', data: simulateSchedule(currentValue, monthlyInvestment, highToLowRates) }
+    ];
+
+    const width = 640, height = 320;
+    const padLeft = 64, padRight = 16, padTop = 16, padBottom = 34;
+    const chartW = width - padLeft - padRight;
+    const chartH = height - padTop - padBottom;
+
+    const maxVal = Math.max(...series.flatMap(s => s.data));
+    const niceMax = maxVal <= 0 ? 1 : Math.pow(10, Math.floor(Math.log10(maxVal))) * Math.ceil(maxVal / Math.pow(10, Math.floor(Math.log10(maxVal))));
+
+    function xFor(yearIdx){ return padLeft + (yearIdx / yearsInt) * chartW; }
+    function yFor(val){ return padTop + chartH - (val / niceMax) * chartH; }
+
+    // Gridlines + y-axis labels
+    const gridSteps = 4;
+    for (let i = 0; i <= gridSteps; i++){
+      const val = (niceMax / gridSteps) * i;
+      const y = yFor(val);
+      svg.appendChild(svgEl('line', { x1: padLeft, x2: width - padRight, y1: y, y2: y, stroke: '#E7DFC3', 'stroke-width': 1 }));
+      const label = svgEl('text', { x: padLeft - 8, y: y + 4, 'text-anchor': 'end', 'font-family': 'IBM Plex Mono, monospace', 'font-size': '10', fill: '#8C8163' });
+      label.textContent = fmtCompact(val);
+      svg.appendChild(label);
+    }
+
+    // X-axis labels: start, end, and a few in between
+    const xTickCount = Math.min(yearsInt, 5);
+    for (let i = 0; i <= xTickCount; i++){
+      const yearIdx = Math.round((yearsInt / xTickCount) * i);
+      const x = xFor(yearIdx);
+      const label = svgEl('text', { x: x, y: height - padBottom + 18, 'text-anchor': 'middle', 'font-family': 'IBM Plex Mono, monospace', 'font-size': '10', fill: '#8C8163' });
+      label.textContent = 'Yr ' + yearIdx;
+      svg.appendChild(label);
+    }
+
+    // Lines
+    series.forEach((s) => {
+      const points = s.data.map((v, idx) => xFor(idx) + ',' + yFor(v)).join(' ');
+      svg.appendChild(svgEl('polyline', { points, fill: 'none', stroke: s.color, 'stroke-width': 2.5, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+      const lastX = xFor(s.data.length - 1);
+      const lastY = yFor(s.data[s.data.length - 1]);
+      svg.appendChild(svgEl('circle', { cx: lastX, cy: lastY, r: 3.5, fill: s.color }));
+    });
+
+    // Legend with final values
+    series.forEach((s) => {
+      const item = document.createElement('div');
+      item.className = 'legend-item';
+      const swatch = document.createElement('span');
+      swatch.className = 'legend-swatch';
+      swatch.style.background = s.color;
+      const label = document.createElement('span');
+      label.className = 'legend-label';
+      label.textContent = s.label + ': ';
+      const value = document.createElement('span');
+      value.className = 'legend-value';
+      value.textContent = '$' + s.data[s.data.length - 1].toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+      item.appendChild(swatch);
+      item.appendChild(label);
+      item.appendChild(value);
+      legend.appendChild(item);
+    });
   }
 
   monthlyInvestmentEl.addEventListener('input', () => { syncInvestmentFromMonthly(); recalc(); });

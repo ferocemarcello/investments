@@ -123,6 +123,50 @@
     margin-bottom: 22px;
   }
 
+  .field-pair{
+    margin-bottom: 24px;
+  }
+
+  .pair-title{
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 0.88rem;
+    color: #D8D2BE;
+    margin: 0 0 10px;
+  }
+
+  .pair-title .flag{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    color: #6E7F72;
+  }
+
+  .field-pair-row{
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: end;
+    gap: 10px;
+  }
+
+  .field-pair-item label{
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #7C8B7B;
+    margin-bottom: 6px;
+  }
+
+  .pair-link{
+    color: var(--brass-soft);
+    font-size: 0.95rem;
+    padding-bottom: 10px;
+    line-height: 1;
+  }
+
   .field label{
     display: flex;
     justify-content: space-between;
@@ -439,11 +483,24 @@
     <section class="entry" aria-labelledby="entry-title">
       <p class="entry-title" id="entry-title">Ledger entry</p>
 
-      <div class="field">
-        <label for="growthRate">Growth rate <span class="flag" id="growthFlagUnit">— monthly</span></label>
-        <div class="field-input">
-          <input type="number" id="growthRate" inputmode="decimal" step="0.01" placeholder="0.50" value="0.50">
-          <span class="unit">%</span>
+      <div class="field-pair">
+        <p class="pair-title">Growth rate <span class="flag">monthly ⇄ annual</span></p>
+        <div class="field-pair-row">
+          <div class="field-pair-item">
+            <label for="monthlyGrowth">Monthly</label>
+            <div class="field-input">
+              <input type="number" id="monthlyGrowth" inputmode="decimal" step="0.01" placeholder="0.50" value="0.5">
+              <span class="unit">%</span>
+            </div>
+          </div>
+          <span class="pair-link" aria-hidden="true">⇄</span>
+          <div class="field-pair-item">
+            <label for="annualGrowth">Annual</label>
+            <div class="field-input">
+              <input type="number" id="annualGrowth" inputmode="decimal" step="0.01" placeholder="6.17">
+              <span class="unit">%</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -472,7 +529,7 @@
       </div>
 
       <div class="toggle-row">
-        <span class="toggle-label">Rates given annually<span class="flag">--annual</span></span>
+        <span class="toggle-label">Inflation rate given annually<span class="flag">--annual</span></span>
         <span class="switch">
           <input type="checkbox" id="annualToggle" aria-describedby="annual-desc">
           <span class="track" aria-hidden="true"></span>
@@ -548,14 +605,14 @@
 (function(){
   const $ = (id) => document.getElementById(id);
 
-  const growthEl = $('growthRate');
+  const monthlyGrowthEl = $('monthlyGrowth');
+  const annualGrowthEl = $('annualGrowth');
   const inflationEl = $('inflationRate');
   const withdrawalEl = $('withdrawal');
   const taxEl = $('taxRate');
   const annualEl = $('annualToggle');
   const errorEl = $('errorMsg');
 
-  const growthFlagUnit = $('growthFlagUnit');
   const inflationFlagUnit = $('inflationFlagUnit');
 
   const outWithdrawal = $('outWithdrawal');
@@ -569,8 +626,30 @@
     return Math.pow(1 + annualRate, 1/12) - 1;
   }
 
+  function monthlyToAnnual(monthlyRate){
+    return Math.pow(1 + monthlyRate, 12) - 1;
+  }
+
   function computeRealMonthlyRate(nominalMonthly, inflationMonthly){
     return (1 + nominalMonthly) / (1 + inflationMonthly) - 1;
+  }
+
+  function round5(n){
+    return Math.round(n * 100000) / 100000;
+  }
+
+  // Keep the monthly and annual growth-rate fields in sync in both directions.
+  // (1+monthly)^12 - 1 = annual  <->  (1+annual)^(1/12) - 1 = monthly
+  function syncGrowthFromMonthly(){
+    const m = parseFloat(monthlyGrowthEl.value);
+    if (isNaN(m)) return;
+    annualGrowthEl.value = round5(monthlyToAnnual(m / 100) * 100);
+  }
+
+  function syncGrowthFromAnnual(){
+    const a = parseFloat(annualGrowthEl.value);
+    if (isNaN(a)) return;
+    monthlyGrowthEl.value = round5(annualToMonthly(a / 100) * 100);
   }
 
   function fmtMoney(n){
@@ -596,21 +675,19 @@
   }
 
   function recalc(){
-    const growthInput = parseFloat(growthEl.value);
+    const monthlyGrowthInput = parseFloat(monthlyGrowthEl.value);
     const inflationInput = parseFloat(inflationEl.value);
     const withdrawal = parseFloat(withdrawalEl.value);
     const taxPct = parseFloat(taxEl.value);
-    const annual = annualEl.checked;
+    const inflationAnnual = annualEl.checked;
 
-    growthFlagUnit.textContent = annual ? '— annual' : '— monthly';
-    inflationFlagUnit.textContent = annual ? '— annual' : '— monthly';
+    inflationFlagUnit.textContent = inflationAnnual ? '— annual' : '— monthly';
 
-    if ([growthInput, inflationInput, withdrawal, taxPct].some((v) => isNaN(v))){
-      showError('Fill in all four fields to compute the wallet value.');
+    if ([monthlyGrowthInput, inflationInput, withdrawal, taxPct].some((v) => isNaN(v))){
+      showError('Fill in all fields to compute the wallet value.');
       return;
     }
 
-    const growthRate = growthInput / 100;
     const inflationRate = inflationInput / 100;
     const tax = taxPct / 100;
 
@@ -619,10 +696,9 @@
       return;
     }
 
-    let nominalMonthly = growthRate;
+    const nominalMonthly = monthlyGrowthInput / 100;
     let inflationMonthly = inflationRate;
-    if (annual){
-      nominalMonthly = annualToMonthly(growthRate);
+    if (inflationAnnual){
       inflationMonthly = annualToMonthly(inflationRate);
     }
 
@@ -646,11 +722,15 @@
     outWallet.textContent = fmtMoney(walletValue);
   }
 
-  [growthEl, inflationEl, withdrawalEl, taxEl, annualEl].forEach((el) => {
+  monthlyGrowthEl.addEventListener('input', () => { syncGrowthFromMonthly(); recalc(); });
+  annualGrowthEl.addEventListener('input', () => { syncGrowthFromAnnual(); recalc(); });
+
+  [inflationEl, withdrawalEl, taxEl, annualEl].forEach((el) => {
     el.addEventListener('input', recalc);
     el.addEventListener('change', recalc);
   });
 
+  syncGrowthFromMonthly();
   recalc();
 })();
 </script>

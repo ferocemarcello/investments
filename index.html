@@ -337,13 +337,7 @@
     margin-top: clamp(40px, 6vw, 72px);
     padding-top: 24px;
     border-top: 1px solid #2C4437;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    max-width: 900px;
-  }
-  @media (max-width: 700px){
-    footer.note{ grid-template-columns: 1fr; }
+    max-width: 56ch;
   }
 
   footer.note h3{
@@ -479,11 +473,6 @@
     <div>
       <h3>Why the real rate</h3>
       <p>A nominal return alone assumes prices never rise. If your portfolio grows 6%/yr but inflation runs 2%/yr, your purchasing power only grows about 3.9%/yr. This ledger divides by that real rate, so the withdrawal keeps its buying power forever instead of quietly shrinking.</p>
-    </div>
-    <div>
-      <h3>Matches the script</h3>
-      <p>Same math as <code>fire_wallet_value_calc.py</code> in this repository, run from the command line:</p>
-      <p><code>python fire_wallet_value_calc.py --growth-rate 0.06 --inflation-rate 0.024 --withdrawal 3000 --tax 0.22 --annual</code></p>
     </div>
   </footer>
 

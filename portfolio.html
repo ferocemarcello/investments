@@ -261,6 +261,61 @@
     margin: 6px 0 24px;
   }
 
+  .toggle-row{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0 18px;
+  }
+
+  .toggle-label{
+    font-size: 0.88rem;
+    color: #D8D2BE;
+  }
+  .toggle-label .flag{
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: #6E7F72;
+    margin-top: 2px;
+  }
+
+  .switch{
+    position: relative;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+  .switch input{
+    position: absolute;
+    opacity: 0;
+    width: 100%; height: 100%;
+    margin: 0;
+    cursor: pointer;
+    z-index: 2;
+  }
+  .switch .track{
+    position: absolute;
+    inset: 0;
+    background: #2C4437;
+    border-radius: 999px;
+    transition: background 0.2s ease;
+  }
+  .switch .thumb{
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: #A9B8AC;
+    transition: transform 0.2s ease, background 0.2s ease;
+  }
+  .switch input:checked + .track{ background: var(--brass-soft); }
+  .switch input:checked ~ .thumb{ transform: translateX(20px); background: #F4EEDA; }
+
+  .field-input input:disabled{
+    opacity: 0.35;
+  }
+
   /* ---------- RESULT / STATEMENT PANEL ---------- */
 
   .statement-stage{
@@ -702,6 +757,25 @@
         </div>
       </div>
 
+      <div class="toggle-row">
+        <span class="toggle-label">Grow investment yearly<span class="flag">--investment-growth</span></span>
+        <span class="switch">
+          <input type="checkbox" id="investmentGrowthToggle">
+          <span class="track" aria-hidden="true"></span>
+          <span class="thumb" aria-hidden="true"></span>
+        </span>
+      </div>
+
+      <div class="field">
+        <label for="investmentGrowthRate">Investment growth rate <span class="flag">per year</span></label>
+        <div class="field-input">
+          <input type="number" id="investmentGrowthRate" inputmode="decimal" step="0.1" placeholder="3" value="3" disabled>
+          <span class="unit">%/yr</span>
+        </div>
+      </div>
+
+      <hr class="divider">
+
       <div class="field-pair">
         <p class="pair-title">Growth rate <span class="flag">monthly ⇄ annual</span></p>
         <div class="field-pair-row">
@@ -830,6 +904,8 @@
   const yearsEl = $('years');
   const scenarioSpreadEl = $('scenarioSpread');
   const taxEl = $('taxRate');
+  const investmentGrowthToggleEl = $('investmentGrowthToggle');
+  const investmentGrowthRateEl = $('investmentGrowthRate');
   const breakdownTableBody = $('breakdownTableBody');
   const errorEl = $('errorMsg');
 
@@ -899,15 +975,46 @@
     errorEl.classList.remove('show');
   }
 
+  // The monthly contribution amount for a given year (1-indexed), optionally escalating
+  // by a fixed percentage each year. escalationPct of 0 always returns the base amount,
+  // so callers don't need a separate on/off branch.
+  function yearlyContribution(baseMonthly, escalationPct, year){
+    return baseMonthly * Math.pow(1 + escalationPct / 100, year - 1);
+  }
+
+  // Simulates month-by-month at a single constant growth rate, honoring escalating
+  // contributions. Returns the ending balance and the total amount contributed.
+  function simulateFutureValue(startValue, baseMonthlyContribution, monthlyGrowthPct, years, escalationPct){
+    const r = monthlyGrowthPct / 100;
+    const yearsInt = Math.max(0, Math.round(years));
+    let balance = startValue;
+    let totalContributed = 0;
+    for (let y = 1; y <= yearsInt; y++){
+      const contrib = yearlyContribution(baseMonthlyContribution, escalationPct, y);
+      for (let m = 0; m < 12; m++){
+        balance = (Math.abs(r) < 1e-12) ? (balance + contrib) : (balance * (1 + r) + contrib);
+        totalContributed += contrib;
+      }
+    }
+    return { futureValue: balance, totalContributed };
+  }
+
   function recalc(){
     const currentValue = parseFloat(currentValueEl.value);
     const monthlyInvestment = parseFloat(monthlyInvestmentEl.value);
     const monthlyGrowthInput = parseFloat(monthlyGrowthEl.value);
     const years = parseFloat(yearsEl.value);
     const taxPct = parseFloat(taxEl.value);
+    const escalationEnabled = investmentGrowthToggleEl.checked;
+    const escalationRateInput = parseFloat(investmentGrowthRateEl.value);
 
     if ([currentValue, monthlyInvestment, monthlyGrowthInput, years, taxPct].some((v) => isNaN(v))){
       showError('Fill in all fields to compute the projection.');
+      return;
+    }
+
+    if (escalationEnabled && isNaN(escalationRateInput)){
+      showError('Enter a valid investment growth rate, or turn off growing investment.');
       return;
     }
 
@@ -923,23 +1030,9 @@
 
     yearsLabel.textContent = years;
 
-    const r = monthlyGrowthInput / 100;
-    const n = years * 12;
+    const escalationPct = escalationEnabled ? escalationRateInput : 0;
 
-    let futureFromCurrent, futureFromContributions;
-
-    if (Math.abs(r) < 1e-12){
-      // Zero growth: no compounding, just addition.
-      futureFromCurrent = currentValue;
-      futureFromContributions = monthlyInvestment * n;
-    } else {
-      const growthFactor = Math.pow(1 + r, n);
-      futureFromCurrent = currentValue * growthFactor;
-      futureFromContributions = monthlyInvestment * ((growthFactor - 1) / r);
-    }
-
-    const futureValue = futureFromCurrent + futureFromContributions;
-    const totalContributed = monthlyInvestment * n;
+    const { futureValue, totalContributed } = simulateFutureValue(currentValue, monthlyInvestment, monthlyGrowthInput, years, escalationPct);
     const growthEarned = futureValue - currentValue - totalContributed;
 
     clearError();
@@ -947,8 +1040,8 @@
     outContributed.textContent = '$' + fmtMoney(totalContributed);
     outGrowthEarned.textContent = '$' + fmtMoney(growthEarned);
 
-    renderScenarioChart(currentValue, monthlyInvestment, monthlyGrowthInput, years);
-    renderBreakdownTable(currentValue, monthlyInvestment, monthlyGrowthInput, years, taxPct);
+    renderScenarioChart(currentValue, monthlyInvestment, monthlyGrowthInput, years, escalationPct);
+    renderBreakdownTable(currentValue, monthlyInvestment, monthlyGrowthInput, years, taxPct, escalationPct);
   }
 
   // ---------- Scenario chart: same average annual rate, different sequencing ----------
@@ -976,16 +1069,18 @@
   // Simulate month-by-month, applying that year's annual rate (converted to monthly)
   // for all 12 months in the year, adding the contribution at the end of each month.
   // Returns an array of balances at year 0 (start), 1, 2, ... years.
-  function simulateSchedule(startValue, monthlyContribution, annualRatesPct){
+  function simulateSchedule(startValue, baseMonthlyContribution, annualRatesPct, escalationPct){
     let balance = startValue;
     const yearEndBalances = [startValue];
-    for (const pct of annualRatesPct){
+    annualRatesPct.forEach((pct, idx) => {
+      const year = idx + 1;
+      const contrib = yearlyContribution(baseMonthlyContribution, escalationPct, year);
       const monthlyRate = annualToMonthly(pct / 100);
       for (let m = 0; m < 12; m++){
-        balance = balance * (1 + monthlyRate) + monthlyContribution;
+        balance = balance * (1 + monthlyRate) + contrib;
       }
       yearEndBalances.push(balance);
-    }
+    });
     return yearEndBalances;
   }
 
@@ -1005,7 +1100,7 @@
     return el;
   }
 
-  function renderScenarioChart(currentValue, monthlyInvestment, avgMonthlyGrowthPct, years){
+  function renderScenarioChart(currentValue, monthlyInvestment, avgMonthlyGrowthPct, years, escalationPct){
     const svg = document.getElementById('scenarioSvg');
     const legend = document.getElementById('scenarioLegend');
     svg.innerHTML = '';
@@ -1020,9 +1115,9 @@
     const highToLowRates = buildRamp(avgAnnualPct, spreadPct, yearsInt, false);
 
     const series = [
-      { label: 'Even growth', color: '#2E5C8A', data: simulateSchedule(currentValue, monthlyInvestment, evenRates) },
-      { label: 'Low \u2192 high', color: '#B08C3E', data: simulateSchedule(currentValue, monthlyInvestment, lowToHighRates) },
-      { label: 'High \u2192 low', color: '#8C3A2E', data: simulateSchedule(currentValue, monthlyInvestment, highToLowRates) }
+      { label: 'Even growth', color: '#2E5C8A', data: simulateSchedule(currentValue, monthlyInvestment, evenRates, escalationPct) },
+      { label: 'Low \u2192 high', color: '#B08C3E', data: simulateSchedule(currentValue, monthlyInvestment, lowToHighRates, escalationPct) },
+      { label: 'High \u2192 low', color: '#8C3A2E', data: simulateSchedule(currentValue, monthlyInvestment, highToLowRates, escalationPct) }
     ];
 
     const width = 640, height = 320;
@@ -1091,7 +1186,7 @@
   // Simulate month-by-month at the single entered growth rate, tracking both the
   // compounding balance (gross value) and the cost basis (starting value + contributions
   // paid in so far, which is never taxed — only the gain above it is).
-  function simulateYearlyBreakdown(startValue, monthlyContribution, monthlyGrowthPct, years, taxPct){
+  function simulateYearlyBreakdown(startValue, baseMonthlyContribution, monthlyGrowthPct, years, taxPct, escalationPct){
     const r = monthlyGrowthPct / 100;
     const tax = taxPct / 100;
     const yearsInt = Math.max(0, Math.round(years));
@@ -1101,13 +1196,14 @@
     const rows = [];
 
     for (let y = 1; y <= yearsInt; y++){
+      const contrib = yearlyContribution(baseMonthlyContribution, escalationPct, y);
       for (let m = 0; m < 12; m++){
         if (Math.abs(r) < 1e-12){
-          balance += monthlyContribution;
+          balance += contrib;
         } else {
-          balance = balance * (1 + r) + monthlyContribution;
+          balance = balance * (1 + r) + contrib;
         }
-        costBasis += monthlyContribution;
+        costBasis += contrib;
       }
       const gain = Math.max(0, balance - costBasis);
       const taxOwed = gain * tax;
@@ -1118,8 +1214,8 @@
     return rows;
   }
 
-  function renderBreakdownTable(currentValue, monthlyInvestment, monthlyGrowthPct, years, taxPct){
-    const rows = simulateYearlyBreakdown(currentValue, monthlyInvestment, monthlyGrowthPct, years, taxPct);
+  function renderBreakdownTable(currentValue, monthlyInvestment, monthlyGrowthPct, years, taxPct, escalationPct){
+    const rows = simulateYearlyBreakdown(currentValue, monthlyInvestment, monthlyGrowthPct, years, taxPct, escalationPct);
     breakdownTableBody.innerHTML = '';
 
     rows.forEach((row) => {
@@ -1151,9 +1247,14 @@
   monthlyGrowthEl.addEventListener('input', () => { syncGrowthFromMonthly(); recalc(); });
   annualGrowthEl.addEventListener('input', () => { syncGrowthFromAnnual(); recalc(); });
 
-  [currentValueEl, yearsEl, scenarioSpreadEl, taxEl].forEach((el) => {
+  [currentValueEl, yearsEl, scenarioSpreadEl, taxEl, investmentGrowthRateEl].forEach((el) => {
     el.addEventListener('input', recalc);
     el.addEventListener('change', recalc);
+  });
+
+  investmentGrowthToggleEl.addEventListener('change', () => {
+    investmentGrowthRateEl.disabled = !investmentGrowthToggleEl.checked;
+    recalc();
   });
 
   syncInvestmentFromMonthly();

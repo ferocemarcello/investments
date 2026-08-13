@@ -502,6 +502,120 @@
     color: var(--ink);
   }
 
+  /* ---------- YEAR-BY-YEAR BREAKDOWN ---------- */
+
+  .breakdown-stage{
+    margin-top: clamp(28px, 4vw, 44px);
+  }
+
+  .breakdown{
+    background: var(--paper);
+    color: var(--ink);
+    border-radius: 6px;
+    box-shadow: 0 24px 56px -20px rgba(0,0,0,0.6);
+    overflow: hidden;
+  }
+
+  .breakdown-summary{
+    cursor: pointer;
+    padding: 26px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    list-style: none;
+  }
+  .breakdown-summary::-webkit-details-marker{
+    display: none;
+  }
+  .breakdown-summary::marker{
+    display: none;
+  }
+  .breakdown-summary::after{
+    content: "\2193  Expand";
+    align-self: flex-start;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--brass-soft);
+    margin-top: 4px;
+  }
+  details[open] .breakdown-summary::after{
+    content: "\2191  Collapse";
+  }
+
+  .breakdown-eyebrow{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--brass-soft);
+  }
+
+  .breakdown-title{
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: clamp(1.25rem, 2.4vw, 1.6rem);
+    color: var(--ink);
+    margin: 0;
+  }
+
+  .breakdown-body{
+    padding: 0 32px 30px;
+  }
+
+  .breakdown-note{
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    max-width: 62ch;
+    margin: 0 0 18px;
+  }
+
+  .breakdown-table-wrap{
+    max-height: 420px;
+    overflow-y: auto;
+    border: 1px solid var(--paper-shade);
+    border-radius: 4px;
+  }
+
+  table.breakdown-table{
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+  }
+
+  table.breakdown-table thead th{
+    position: sticky;
+    top: 0;
+    background: var(--paper-shade);
+    color: var(--ink-soft);
+    text-align: right;
+    padding: 10px 14px;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  table.breakdown-table thead th:first-child,
+  table.breakdown-table tbody td:first-child{
+    text-align: left;
+  }
+
+  table.breakdown-table tbody td{
+    padding: 8px 14px;
+    text-align: right;
+    border-top: 1px solid var(--paper-shade);
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  table.breakdown-table tbody tr:nth-child(even){
+    background: rgba(176, 140, 62, 0.06);
+  }
+
   /* ---------- FOOTER / FORMULA NOTE ---------- */
 
   footer.note{
@@ -618,6 +732,16 @@
           <span class="unit">yrs</span>
         </div>
       </div>
+
+      <hr class="divider">
+
+      <div class="field">
+        <label for="taxRate">Capital gains tax</label>
+        <div class="field-input">
+          <input type="number" id="taxRate" inputmode="decimal" step="0.1" placeholder="22" value="22">
+          <span class="unit">%</span>
+        </div>
+      </div>
     </section>
 
     <!-- RESULT -->
@@ -666,6 +790,32 @@
     </div>
   </section>
 
+  <!-- YEAR-BY-YEAR BREAKDOWN -->
+  <section class="breakdown-stage" aria-labelledby="breakdown-title-el">
+    <details class="breakdown">
+      <summary class="breakdown-summary">
+        <span class="breakdown-eyebrow">Year-by-year</span>
+        <h2 class="breakdown-title" id="breakdown-title-el">Gross value, tax, and net value by year</h2>
+      </summary>
+      <div class="breakdown-body">
+        <p class="breakdown-note">For each year, this shows the projected gross portfolio value, the capital gains tax you'd owe if you sold everything that year, and what you'd net after that tax. Tax applies only to the gain above your starting balance plus contributions — not to the contributions themselves.</p>
+        <div class="breakdown-table-wrap">
+          <table class="breakdown-table">
+            <thead>
+              <tr>
+                <th>Year</th>
+                <th>Gross value</th>
+                <th>Tax if sold</th>
+                <th>Net value</th>
+              </tr>
+            </thead>
+            <tbody id="breakdownTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </details>
+  </section>
+
 </div>
 
 <script>
@@ -679,6 +829,8 @@
   const annualGrowthEl = $('annualGrowth2');
   const yearsEl = $('years');
   const scenarioSpreadEl = $('scenarioSpread');
+  const taxEl = $('taxRate');
+  const breakdownTableBody = $('breakdownTableBody');
   const errorEl = $('errorMsg');
 
   const yearsLabel = $('yearsLabel');
@@ -739,6 +891,7 @@
     outFutureValue.textContent = 'n/a';
     outContributed.textContent = '—';
     outGrowthEarned.textContent = '—';
+    breakdownTableBody.innerHTML = '';
   }
 
   function clearError(){
@@ -751,14 +904,20 @@
     const monthlyInvestment = parseFloat(monthlyInvestmentEl.value);
     const monthlyGrowthInput = parseFloat(monthlyGrowthEl.value);
     const years = parseFloat(yearsEl.value);
+    const taxPct = parseFloat(taxEl.value);
 
-    if ([currentValue, monthlyInvestment, monthlyGrowthInput, years].some((v) => isNaN(v))){
+    if ([currentValue, monthlyInvestment, monthlyGrowthInput, years, taxPct].some((v) => isNaN(v))){
       showError('Fill in all fields to compute the projection.');
       return;
     }
 
     if (years < 0){
       showError('Years must be zero or more.');
+      return;
+    }
+
+    if (taxPct >= 100){
+      showError('Tax must be less than 100%.');
       return;
     }
 
@@ -789,6 +948,7 @@
     outGrowthEarned.textContent = '$' + fmtMoney(growthEarned);
 
     renderScenarioChart(currentValue, monthlyInvestment, monthlyGrowthInput, years);
+    renderBreakdownTable(currentValue, monthlyInvestment, monthlyGrowthInput, years, taxPct);
   }
 
   // ---------- Scenario chart: same average annual rate, different sequencing ----------
@@ -926,13 +1086,72 @@
     });
   }
 
+  // ---------- Year-by-year breakdown: gross value, tax if sold, net value ----------
+
+  // Simulate month-by-month at the single entered growth rate, tracking both the
+  // compounding balance (gross value) and the cost basis (starting value + contributions
+  // paid in so far, which is never taxed — only the gain above it is).
+  function simulateYearlyBreakdown(startValue, monthlyContribution, monthlyGrowthPct, years, taxPct){
+    const r = monthlyGrowthPct / 100;
+    const tax = taxPct / 100;
+    const yearsInt = Math.max(0, Math.round(years));
+
+    let balance = startValue;
+    let costBasis = startValue;
+    const rows = [];
+
+    for (let y = 1; y <= yearsInt; y++){
+      for (let m = 0; m < 12; m++){
+        if (Math.abs(r) < 1e-12){
+          balance += monthlyContribution;
+        } else {
+          balance = balance * (1 + r) + monthlyContribution;
+        }
+        costBasis += monthlyContribution;
+      }
+      const gain = Math.max(0, balance - costBasis);
+      const taxOwed = gain * tax;
+      const netValue = balance - taxOwed;
+      rows.push({ year: y, gross: balance, taxOwed, net: netValue });
+    }
+
+    return rows;
+  }
+
+  function renderBreakdownTable(currentValue, monthlyInvestment, monthlyGrowthPct, years, taxPct){
+    const rows = simulateYearlyBreakdown(currentValue, monthlyInvestment, monthlyGrowthPct, years, taxPct);
+    breakdownTableBody.innerHTML = '';
+
+    rows.forEach((row) => {
+      const tr = document.createElement('tr');
+
+      const yearTd = document.createElement('td');
+      yearTd.textContent = row.year;
+
+      const grossTd = document.createElement('td');
+      grossTd.textContent = '$' + fmtMoney(row.gross);
+
+      const taxTd = document.createElement('td');
+      taxTd.textContent = '$' + fmtMoney(row.taxOwed);
+
+      const netTd = document.createElement('td');
+      netTd.textContent = '$' + fmtMoney(row.net);
+
+      tr.appendChild(yearTd);
+      tr.appendChild(grossTd);
+      tr.appendChild(taxTd);
+      tr.appendChild(netTd);
+      breakdownTableBody.appendChild(tr);
+    });
+  }
+
   monthlyInvestmentEl.addEventListener('input', () => { syncInvestmentFromMonthly(); recalc(); });
   annualInvestmentEl.addEventListener('input', () => { syncInvestmentFromAnnual(); recalc(); });
 
   monthlyGrowthEl.addEventListener('input', () => { syncGrowthFromMonthly(); recalc(); });
   annualGrowthEl.addEventListener('input', () => { syncGrowthFromAnnual(); recalc(); });
 
-  [currentValueEl, yearsEl, scenarioSpreadEl].forEach((el) => {
+  [currentValueEl, yearsEl, scenarioSpreadEl, taxEl].forEach((el) => {
     el.addEventListener('input', recalc);
     el.addEventListener('change', recalc);
   });

@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wallet Ledger — FIRE calculator</title>
-<meta name="description" content="How much does your wallet need to weigh to never sell your future again? An inflation-aware FIRE wallet value calculator.">
+<title>Portfolio Growth — Wallet Ledger</title>
+<meta name="description" content="Project how a starting balance plus regular contributions compounds into a future portfolio value.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -288,7 +288,7 @@
     font-size: 0.95rem;
     color: var(--ink-soft);
     margin-bottom: 10px;
-    max-width: 40ch;
+    max-width: 44ch;
   }
 
   .statement-value{
@@ -399,14 +399,14 @@
 <div class="wrap">
 
   <header class="hero">
-    <div class="eyebrow">Wallet Ledger · FIRE calculator</div>
+    <div class="eyebrow">Wallet Ledger · Growth calculator</div>
     <nav class="page-nav" aria-label="Calculator pages">
-      <a href="index.html" class="page-nav-link" aria-current="page">Spend it</a>
+      <a href="index.html" class="page-nav-link">Spend it</a>
       <span class="page-nav-sep">·</span>
-      <a href="portfolio.html" class="page-nav-link">Grow it</a>
+      <a href="portfolio.html" class="page-nav-link" aria-current="page">Grow it</a>
     </nav>
-    <h1>What does your wallet need to <em>weigh</em>, to never sell your future again?</h1>
-    <p>Enter your expected growth, inflation, target withdrawal and tax rate. Monthly and annual figures stay in sync as you type — the wallet value on the right accounts for inflation, so your withdrawal keeps its buying power forever.</p>
+    <h1>What does today's saving habit <em>become</em>, given enough years?</h1>
+    <p>Enter a starting balance, a contribution amount, and a growth rate. Monthly and annual figures stay in sync as you type — the projection compounds your contributions and existing balance together over the years you choose.</p>
   </header>
 
   <main class="desk">
@@ -415,63 +415,65 @@
     <section class="entry" aria-labelledby="entry-title">
       <p class="entry-title" id="entry-title">Ledger entry</p>
 
-      <div class="field-pair">
-        <p class="pair-title">Growth rate <span class="flag">monthly ⇄ annual</span></p>
-        <div class="field-pair-row">
-          <div class="field-pair-item">
-            <label for="monthlyGrowth">Monthly</label>
-            <div class="field-input">
-              <input type="number" id="monthlyGrowth" inputmode="decimal" step="0.01" placeholder="0.50" value="0.5">
-              <span class="unit">%</span>
-            </div>
-          </div>
-          <span class="pair-link" aria-hidden="true">⇄</span>
-          <div class="field-pair-item">
-            <label for="annualGrowth">Annual</label>
-            <div class="field-input">
-              <input type="number" id="annualGrowth" inputmode="decimal" step="0.01" placeholder="6.17">
-              <span class="unit">%</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div class="field">
-        <label for="inflationRate">Inflation rate <span class="flag">annual</span></label>
+        <label for="currentValue">Current portfolio value</label>
         <div class="field-input">
-          <input type="number" id="inflationRate" inputmode="decimal" step="0.01" placeholder="2.40" value="2.40">
-          <span class="unit">%</span>
+          <input type="number" id="currentValue" inputmode="decimal" step="100" placeholder="50000" value="50000">
+          <span class="unit">now</span>
         </div>
       </div>
 
       <hr class="divider">
 
       <div class="field-pair">
-        <p class="pair-title">Withdrawal <span class="flag">monthly ⇄ annual</span></p>
+        <p class="pair-title">Investment <span class="flag">monthly ⇄ annual</span></p>
         <div class="field-pair-row">
           <div class="field-pair-item">
-            <label for="monthlyWithdrawal">Monthly</label>
+            <label for="monthlyInvestment">Monthly</label>
             <div class="field-input">
-              <input type="number" id="monthlyWithdrawal" inputmode="decimal" step="10" placeholder="3000" value="3000">
+              <input type="number" id="monthlyInvestment" inputmode="decimal" step="10" placeholder="500" value="500">
               <span class="unit">/mo</span>
             </div>
           </div>
           <span class="pair-link" aria-hidden="true">⇄</span>
           <div class="field-pair-item">
-            <label for="annualWithdrawal">Annual</label>
+            <label for="annualInvestment">Annual</label>
             <div class="field-input">
-              <input type="number" id="annualWithdrawal" inputmode="decimal" step="120" placeholder="36000">
+              <input type="number" id="annualInvestment" inputmode="decimal" step="120" placeholder="6000">
               <span class="unit">/yr</span>
             </div>
           </div>
         </div>
       </div>
 
+      <div class="field-pair">
+        <p class="pair-title">Growth rate <span class="flag">monthly ⇄ annual</span></p>
+        <div class="field-pair-row">
+          <div class="field-pair-item">
+            <label for="monthlyGrowth2">Monthly</label>
+            <div class="field-input">
+              <input type="number" id="monthlyGrowth2" inputmode="decimal" step="0.01" placeholder="0.70" value="0.7">
+              <span class="unit">%</span>
+            </div>
+          </div>
+          <span class="pair-link" aria-hidden="true">⇄</span>
+          <div class="field-pair-item">
+            <label for="annualGrowth2">Annual</label>
+            <div class="field-input">
+              <input type="number" id="annualGrowth2" inputmode="decimal" step="0.01" placeholder="8.73">
+              <span class="unit">%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
       <div class="field">
-        <label for="taxRate">Capital gains tax <span class="flag">--tax</span></label>
+        <label for="years">Years investing</label>
         <div class="field-input">
-          <input type="number" id="taxRate" inputmode="decimal" step="0.1" placeholder="22" value="22">
-          <span class="unit">%</span>
+          <input type="number" id="years" inputmode="decimal" step="1" placeholder="20" value="20">
+          <span class="unit">yrs</span>
         </div>
       </div>
     </section>
@@ -481,19 +483,19 @@
       <div class="statement">
         <p class="statement-eyebrow" id="statement-title">Result</p>
         <div class="statement-hero">
-          <span class="label">Wallet value to sustain your withdrawal forever, in today's purchasing power</span>
-          <span class="statement-value" id="outWallet">—</span>
+          <span class="label">Projected portfolio value after <span id="yearsLabel">20</span> years</span>
+          <span class="statement-value" id="outFutureValue">—</span>
         </div>
         <div class="statement-grid">
           <div class="stat-tile">
-            <span class="stat-label">Gross monthly sale</span>
-            <span class="stat-value" id="outSellMonth">—</span>
-            <span class="stat-sub">withdrawal ÷ (1 − tax)</span>
+            <span class="stat-label">Total contributed</span>
+            <span class="stat-value" id="outContributed">—</span>
+            <span class="stat-sub">monthly investment × months</span>
           </div>
           <div class="stat-tile">
-            <span class="stat-label">Real annual return</span>
-            <span class="stat-value" id="outRealAnnual">—</span>
-            <span class="stat-sub">growth net of inflation</span>
+            <span class="stat-label">Growth earned</span>
+            <span class="stat-value" id="outGrowthEarned">—</span>
+            <span class="stat-sub">value − starting balance − contributions</span>
           </div>
         </div>
         <p id="errorMsg" class="error-msg" role="alert"></p>
@@ -503,10 +505,8 @@
   </main>
 
   <footer class="note">
-    <div>
-      <h3>Why the real rate</h3>
-      <p>A nominal return alone assumes prices never rise. If your portfolio grows 6%/yr but inflation runs 2%/yr, your purchasing power only grows about 3.9%/yr. This ledger divides by that real rate, so the withdrawal keeps its buying power forever instead of quietly shrinking.</p>
-    </div>
+    <h3>How this compounds</h3>
+    <p>Each month, the existing balance grows by the monthly rate, and that month's contribution is added. Over the full period this becomes: <code>current × (1+r)^n + contribution × (((1+r)^n − 1) / r)</code>, where <code>r</code> is the monthly growth rate and <code>n</code> is the number of months.</p>
   </footer>
 
 </div>
@@ -515,17 +515,18 @@
 (function(){
   const $ = (id) => document.getElementById(id);
 
-  const monthlyGrowthEl = $('monthlyGrowth');
-  const annualGrowthEl = $('annualGrowth');
-  const inflationEl = $('inflationRate');
-  const monthlyWithdrawalEl = $('monthlyWithdrawal');
-  const annualWithdrawalEl = $('annualWithdrawal');
-  const taxEl = $('taxRate');
+  const currentValueEl = $('currentValue');
+  const monthlyInvestmentEl = $('monthlyInvestment');
+  const annualInvestmentEl = $('annualInvestment');
+  const monthlyGrowthEl = $('monthlyGrowth2');
+  const annualGrowthEl = $('annualGrowth2');
+  const yearsEl = $('years');
   const errorEl = $('errorMsg');
 
-  const outSellMonth = $('outSellMonth');
-  const outRealAnnual = $('outRealAnnual');
-  const outWallet = $('outWallet');
+  const yearsLabel = $('yearsLabel');
+  const outFutureValue = $('outFutureValue');
+  const outContributed = $('outContributed');
+  const outGrowthEarned = $('outGrowthEarned');
 
   function annualToMonthly(annualRate){
     return Math.pow(1 + annualRate, 1/12) - 1;
@@ -535,16 +536,25 @@
     return Math.pow(1 + monthlyRate, 12) - 1;
   }
 
-  function computeRealMonthlyRate(nominalMonthly, inflationMonthly){
-    return (1 + nominalMonthly) / (1 + inflationMonthly) - 1;
-  }
-
   function round5(n){
     return Math.round(n * 100000) / 100000;
   }
 
   function round2(n){
     return Math.round(n * 100) / 100;
+  }
+
+  // Investment: annual is simply 12 x monthly, in both directions.
+  function syncInvestmentFromMonthly(){
+    const m = parseFloat(monthlyInvestmentEl.value);
+    if (isNaN(m)) return;
+    annualInvestmentEl.value = round2(m * 12);
+  }
+
+  function syncInvestmentFromAnnual(){
+    const a = parseFloat(annualInvestmentEl.value);
+    if (isNaN(a)) return;
+    monthlyInvestmentEl.value = round2(a / 12);
   }
 
   // Growth rate: (1+monthly)^12 - 1 = annual  <->  (1+annual)^(1/12) - 1 = monthly
@@ -560,35 +570,17 @@
     monthlyGrowthEl.value = round5(annualToMonthly(a / 100) * 100);
   }
 
-  // Withdrawal: annual is simply 12 x monthly, in both directions.
-  function syncWithdrawalFromMonthly(){
-    const m = parseFloat(monthlyWithdrawalEl.value);
-    if (isNaN(m)) return;
-    annualWithdrawalEl.value = round2(m * 12);
-  }
-
-  function syncWithdrawalFromAnnual(){
-    const a = parseFloat(annualWithdrawalEl.value);
-    if (isNaN(a)) return;
-    monthlyWithdrawalEl.value = round2(a / 12);
-  }
-
   function fmtMoney(n){
     if (!isFinite(n)) return '—';
     return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
-  function fmtPct(n){
-    if (!isFinite(n)) return '—';
-    return (n * 100).toFixed(4) + '%';
-  }
-
   function showError(msg){
     errorEl.textContent = msg;
     errorEl.classList.add('show');
-    outSellMonth.textContent = '—';
-    outRealAnnual.textContent = '—';
-    outWallet.textContent = 'n/a';
+    outFutureValue.textContent = 'n/a';
+    outContributed.textContent = '—';
+    outGrowthEarned.textContent = '—';
   }
 
   function clearError(){
@@ -597,54 +589,61 @@
   }
 
   function recalc(){
+    const currentValue = parseFloat(currentValueEl.value);
+    const monthlyInvestment = parseFloat(monthlyInvestmentEl.value);
     const monthlyGrowthInput = parseFloat(monthlyGrowthEl.value);
-    const inflationInput = parseFloat(inflationEl.value);
-    const monthlyWithdrawal = parseFloat(monthlyWithdrawalEl.value);
-    const taxPct = parseFloat(taxEl.value);
+    const years = parseFloat(yearsEl.value);
 
-    if ([monthlyGrowthInput, inflationInput, monthlyWithdrawal, taxPct].some((v) => isNaN(v))){
-      showError('Fill in all fields to compute the wallet value.');
+    if ([currentValue, monthlyInvestment, monthlyGrowthInput, years].some((v) => isNaN(v))){
+      showError('Fill in all fields to compute the projection.');
       return;
     }
 
-    const tax = taxPct / 100;
-    if (tax >= 1){
-      showError('Tax must be less than 100%.');
+    if (years < 0){
+      showError('Years must be zero or more.');
       return;
     }
 
-    const nominalMonthly = monthlyGrowthInput / 100;
-    const inflationMonthly = annualToMonthly(inflationInput / 100);
-    const realMonthly = computeRealMonthlyRate(nominalMonthly, inflationMonthly);
+    yearsLabel.textContent = years;
 
-    const sellMonth = monthlyWithdrawal / (1 - tax);
-    outSellMonth.textContent = fmtMoney(sellMonth);
+    const r = monthlyGrowthInput / 100;
+    const n = years * 12;
 
-    if (realMonthly <= 0){
-      showError('Real monthly rate is ≤ 0 — growth doesn\'t outpace inflation, so no finite wallet sustains this forever.');
-      return;
+    let futureFromCurrent, futureFromContributions;
+
+    if (Math.abs(r) < 1e-12){
+      // Zero growth: no compounding, just addition.
+      futureFromCurrent = currentValue;
+      futureFromContributions = monthlyInvestment * n;
+    } else {
+      const growthFactor = Math.pow(1 + r, n);
+      futureFromCurrent = currentValue * growthFactor;
+      futureFromContributions = monthlyInvestment * ((growthFactor - 1) / r);
     }
+
+    const futureValue = futureFromCurrent + futureFromContributions;
+    const totalContributed = monthlyInvestment * n;
+    const growthEarned = futureValue - currentValue - totalContributed;
 
     clearError();
-    outRealAnnual.textContent = fmtPct(monthlyToAnnual(realMonthly));
-
-    const walletValue = sellMonth / realMonthly;
-    outWallet.textContent = '$' + fmtMoney(walletValue);
+    outFutureValue.textContent = '$' + fmtMoney(futureValue);
+    outContributed.textContent = '$' + fmtMoney(totalContributed);
+    outGrowthEarned.textContent = '$' + fmtMoney(growthEarned);
   }
+
+  monthlyInvestmentEl.addEventListener('input', () => { syncInvestmentFromMonthly(); recalc(); });
+  annualInvestmentEl.addEventListener('input', () => { syncInvestmentFromAnnual(); recalc(); });
 
   monthlyGrowthEl.addEventListener('input', () => { syncGrowthFromMonthly(); recalc(); });
   annualGrowthEl.addEventListener('input', () => { syncGrowthFromAnnual(); recalc(); });
 
-  monthlyWithdrawalEl.addEventListener('input', () => { syncWithdrawalFromMonthly(); recalc(); });
-  annualWithdrawalEl.addEventListener('input', () => { syncWithdrawalFromAnnual(); recalc(); });
-
-  [inflationEl, taxEl].forEach((el) => {
+  [currentValueEl, yearsEl].forEach((el) => {
     el.addEventListener('input', recalc);
     el.addEventListener('change', recalc);
   });
 
+  syncInvestmentFromMonthly();
   syncGrowthFromMonthly();
-  syncWithdrawalFromMonthly();
   recalc();
 })();
 </script>

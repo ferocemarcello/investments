@@ -72,29 +72,36 @@
   .page-nav{
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin: -8px 0 18px;
+    gap: 8px;
+    margin: -4px 0 22px;
   }
   .page-nav-link{
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.75rem;
-    letter-spacing: 0.1em;
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #6E7F72;
+    color: #C8C2AE;
     text-decoration: none;
-    padding-bottom: 2px;
-    border-bottom: 1px solid transparent;
+    padding: 9px 18px;
+    border-radius: 999px;
+    border: 1px solid #3E5A48;
+    background: rgba(176, 140, 62, 0.06);
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
   }
   .page-nav-link:hover{
-    color: #D8D2BE;
+    color: #FBF7EA;
+    border-color: var(--brass-soft);
+    background: rgba(176, 140, 62, 0.14);
   }
   .page-nav-link[aria-current="page"]{
-    color: var(--brass);
-    border-bottom-color: var(--brass-soft);
+    color: var(--ink);
+    background: var(--brass);
+    border-color: var(--brass);
   }
-  .page-nav-sep{
-    color: #4B5B4F;
-    font-size: 0.75rem;
+  .page-nav-link[aria-current="page"]:hover{
+    color: var(--ink);
+    background: var(--brass);
   }
 
   h1{
@@ -402,7 +409,6 @@
     <div class="eyebrow">Wallet Ledger · FIRE calculator</div>
     <nav class="page-nav" aria-label="Calculator pages">
       <a href="index.html" class="page-nav-link" aria-current="page">Spend it</a>
-      <span class="page-nav-sep">·</span>
       <a href="portfolio.html" class="page-nav-link">Grow it</a>
     </nav>
     <h1>What does your wallet need to <em>weigh</em>, to never sell your future again?</h1>

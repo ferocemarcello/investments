@@ -607,11 +607,6 @@
     </div>
   </section>
 
-  <footer class="note">
-    <h3>How this compounds</h3>
-    <p>Each month, the existing balance grows by the monthly rate, and that month's contribution is added. Over the full period this becomes: <code>current × (1+r)^n + contribution × (((1+r)^n − 1) / r)</code>, where <code>r</code> is the monthly growth rate and <code>n</code> is the number of months.</p>
-  </footer>
-
 </div>
 
 <script>
@@ -799,7 +794,7 @@
     const highToLowRates = buildRamp(avgAnnualPct, SCENARIO_SPREAD_PP, yearsInt, false);
 
     const series = [
-      { label: 'Even growth', color: '#8A6D2F', data: simulateSchedule(currentValue, monthlyInvestment, evenRates) },
+      { label: 'Even growth', color: '#2E5C8A', data: simulateSchedule(currentValue, monthlyInvestment, evenRates) },
       { label: 'Low \u2192 high', color: '#B08C3E', data: simulateSchedule(currentValue, monthlyInvestment, lowToHighRates) },
       { label: 'High \u2192 low', color: '#8C3A2E', data: simulateSchedule(currentValue, monthlyInvestment, highToLowRates) }
     ];

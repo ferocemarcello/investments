@@ -406,6 +406,57 @@
     margin: 0 0 20px;
   }
 
+  .scenario-control{
+    margin-bottom: 22px;
+    max-width: 220px;
+  }
+
+  .scenario-control label{
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--brass-soft);
+    margin-bottom: 8px;
+  }
+
+  .scenario-control-input{
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    border-bottom: 1px dashed var(--rule);
+    padding-bottom: 6px;
+    transition: border-color 0.2s ease;
+  }
+
+  .scenario-control-input:focus-within{
+    border-bottom-color: var(--brass);
+  }
+
+  .scenario-control-input input[type="number"]{
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--ink);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1rem;
+    padding: 2px 0;
+    width: 60px;
+    -moz-appearance: textfield;
+  }
+  .scenario-control-input input[type="number"]::-webkit-outer-spin-button,
+  .scenario-control-input input[type="number"]::-webkit-inner-spin-button{
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .scenario-control-input .unit{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+  }
+
   .scenario-chart-wrap{
     width: 100%;
     overflow-x: auto;
@@ -600,6 +651,13 @@
       <p class="scenario-eyebrow">Growth path</p>
       <h2 class="scenario-title" id="scenario-title-el">Same average rate, different order</h2>
       <p class="scenario-note">These three lines use the same average annual growth rate you entered above, just distributed differently across the years — front-loaded, back-loaded, or flat. With regular contributions, when the higher-growth years land matters: growth applied to a larger, later balance compounds more than growth applied early, while the balance is still small.</p>
+      <div class="scenario-control">
+        <label for="scenarioSpread">Spread between high and low years</label>
+        <div class="scenario-control-input">
+          <input type="number" id="scenarioSpread" inputmode="decimal" step="0.5" min="0" max="20" value="3">
+          <span class="unit">pp ± average</span>
+        </div>
+      </div>
       <div class="scenario-chart-wrap">
         <svg id="scenarioSvg" viewBox="0 0 640 320" xmlns="http://www.w3.org/2000/svg"></svg>
       </div>
@@ -619,6 +677,7 @@
   const monthlyGrowthEl = $('monthlyGrowth2');
   const annualGrowthEl = $('annualGrowth2');
   const yearsEl = $('years');
+  const scenarioSpreadEl = $('scenarioSpread');
   const errorEl = $('errorMsg');
 
   const yearsLabel = $('yearsLabel');
@@ -733,7 +792,12 @@
 
   // ---------- Scenario chart: same average annual rate, different sequencing ----------
 
-  const SCENARIO_SPREAD_PP = 3; // percentage points of spread around the average rate
+  // Reads the user-adjustable spread (percentage points around the average rate),
+  // falling back to a sane default if the field is empty or invalid.
+  function getScenarioSpread(){
+    const v = parseFloat(scenarioSpreadEl.value);
+    return (isFinite(v) && v >= 0) ? v : 3;
+  }
 
   // Build a linear ramp of annual rates (in %) across `years`, averaging to `avgPct`.
   function buildRamp(avgPct, spreadPct, years, ascending){
@@ -790,8 +854,9 @@
     const avgAnnualPct = monthlyToAnnual(avgMonthlyGrowthPct / 100) * 100;
 
     const evenRates = new Array(yearsInt).fill(avgAnnualPct);
-    const lowToHighRates = buildRamp(avgAnnualPct, SCENARIO_SPREAD_PP, yearsInt, true);
-    const highToLowRates = buildRamp(avgAnnualPct, SCENARIO_SPREAD_PP, yearsInt, false);
+    const spreadPct = getScenarioSpread();
+    const lowToHighRates = buildRamp(avgAnnualPct, spreadPct, yearsInt, true);
+    const highToLowRates = buildRamp(avgAnnualPct, spreadPct, yearsInt, false);
 
     const series = [
       { label: 'Even growth', color: '#2E5C8A', data: simulateSchedule(currentValue, monthlyInvestment, evenRates) },
@@ -866,7 +931,7 @@
   monthlyGrowthEl.addEventListener('input', () => { syncGrowthFromMonthly(); recalc(); });
   annualGrowthEl.addEventListener('input', () => { syncGrowthFromAnnual(); recalc(); });
 
-  [currentValueEl, yearsEl].forEach((el) => {
+  [currentValueEl, yearsEl, scenarioSpreadEl].forEach((el) => {
     el.addEventListener('input', recalc);
     el.addEventListener('change', recalc);
   });
